@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>D10 · NexusFP — Visor</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--teal:#1A7A8A;--tl:#B8DDE3;--green:#7BAF3A;--gl:#D4EAB0;--navy:#1B3A5C;--mag:#C0396B;--sbn:#2E8B6E;--w:#fff;--bg:#F4F6F8;--bd:#DDE4EA;--tx:#2a3a4a;--mu:#6a8a9a;}
+html,body{height:100%;font-family:'Raleway',sans-serif;background:var(--bg);}
+.slide{position:fixed;inset:0;display:flex;flex-direction:column;}
+.stb{background:var(--navy);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.st{font-family:'Nunito',sans-serif;font-weight:900;font-size:17px;color:#fff;}
+.stag{font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:.7px;}
+.browser{flex:1;display:flex;flex-direction:column;min-height:0;background:#E4EAF0;}
+.bbar{background:#CDD5DE;padding:7px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.dots{display:flex;gap:5px;}.dot{width:11px;height:11px;border-radius:50%;}
+.dot.r{background:#FF5F57;}.dot.y{background:#FEBC2E;}.dot.g{background:#28C840;}
+.url{flex:1;background:#fff;border-radius:18px;padding:4px 12px;font-size:11px;color:var(--mu);border:1px solid var(--bd);}
+.url span{color:var(--teal);font-weight:600;}
+/* NAV */
+.cnav{background:var(--navy);padding:0 20px;display:flex;align-items:stretch;height:44px;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:9px;padding-right:18px;border-right:1px solid rgba(255,255,255,0.1);margin-right:12px;}
+.limg{height:26px;width:auto;opacity:.9;}
+.ltxt{font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:#fff;}
+.ltxt span{color:var(--green);}
+.navi{display:flex;align-items:stretch;gap:2px;flex:1;}
+.ni{padding:0 13px;display:flex;align-items:center;font-size:12.5px;color:rgba(255,255,255,.6);cursor:pointer;font-weight:500;white-space:nowrap;transition:color .2s;}
+.ni:hover{color:#fff;}
+.ni.act{background:var(--teal);color:#fff;font-family:'Nunito',sans-serif;font-weight:700;border-radius:4px 4px 0 0;margin-top:5px;font-size:13px;}
+/* NEXUS */
+.nexus{flex:1;display:flex;flex-direction:column;background:#fff;min-height:0;}
+.ntabs{background:var(--teal);display:flex;align-items:stretch;padding:0 18px;gap:2px;flex-shrink:0;height:36px;}
+.tab{padding:0 16px;font-size:12px;font-family:'Nunito',sans-serif;font-weight:700;color:rgba(255,255,255,.6);display:flex;align-items:center;cursor:pointer;border-radius:4px 4px 0 0;margin-top:4px;transition:all .2s;white-space:nowrap;}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1);}
+.tab.act{background:#fff;color:var(--teal);}
+/* VISOR */
+.visor{flex:1;display:flex;overflow:hidden;min-height:0;}
+.sb{width:284px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto;}
+.sbh{padding:11px 13px 8px;border-bottom:1px solid var(--bd);background:#fff;}
+.sbhttl{font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--navy);display:flex;align-items:center;gap:7px;}
+.sbhttl::before{content:'';width:3px;height:16px;border-radius:2px;background:var(--teal);flex-shrink:0;}
+.sbsub{font-size:10px;color:var(--mu);margin-top:2px;padding-left:10px;}
+.flt{padding:9px 11px;display:flex;flex-direction:column;gap:7px;}
+.fg label{display:block;font-size:9.5px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.fg select{width:100%;padding:5px 8px;border:1px solid var(--bd);border-radius:6px;font-size:11.5px;font-family:'Raleway',sans-serif;color:var(--tx);background:#fff;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236a8a9a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;}
+.fg select:focus{outline:none;border-color:var(--teal);}
+.fdiv{height:1px;background:var(--bd);margin:1px 0;}
+.bsrch{width:100%;padding:7px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.brst{width:100%;padding:5px;background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:6px;font-size:11px;cursor:pointer;}
+/* RESULTS */
+.res{padding:9px 11px 0;border-top:1px solid var(--bd);background:#fff;margin-top:3px;}
+.rct{font-size:10px;color:var(--mu);padding-bottom:6px;}.rct strong{color:var(--teal);}
+.rc{padding:7px 0;border-bottom:1px solid var(--bd);cursor:pointer;}
+.rc:hover .rct2{color:var(--teal);}
+.badge{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-radius:3px;padding:1px 5px;display:inline-block;margin-bottom:2px;}
+.bg{background:var(--green);}.bt{background:var(--teal);}.bn{background:var(--navy);}.bm{background:var(--mag);}.bs{background:var(--sbn);}.bcv{background:#9B59B6;}
+.rct2{font-family:'Nunito',sans-serif;font-weight:700;font-size:11.5px;color:var(--navy);}
+.rcm{font-size:10px;color:var(--mu);margin-top:1px;}
+/* MAP */
+.mapa{flex:1;position:relative;}
+#map{width:100%;height:100%;}
+.mbdg{position:absolute;top:10px;left:10px;z-index:999;background:var(--navy);color:#fff;border-radius:18px;padding:5px 13px;font-family:'Nunito',sans-serif;font-weight:700;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.mbdg span{color:var(--tl);}
+.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{background:rgba(26,122,138,.2)!important;}
+.marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background:rgba(26,122,138,.72)!important;color:#fff!important;font-family:'Nunito',sans-serif!important;font-weight:700!important;font-size:12px!important;}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="stb">
+    <div class="st">NexusFP · Visor de Centros y Actuaciones Innovadoras</div>
+    <div class="stag">CAPIFP · Área Estratégica Agroganadería, RR.NN. y Sostenibilidad · D10</div>
+  </div>
+  <div class="browser">
+    <div class="bbar">
+      <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+      <div class="url">capifp.es / <span>nexusfp</span> / visor</div>
+    </div>
+    <!-- CAPIFP NAV — sin texto duplicado, solo logo + texto único -->
+    <div class="cnav">
+      <div class="logo">
+        <img class="limg" src="data:image/png;base64,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" alt=""/>
+        <div class="ltxt">CAPIFP <span>·</span> Innovación FP</div>
+      </div>
+      <div class="navi">
+        <div class="ni">Centro</div>
+        <div class="ni">Áreas</div>
+        <div class="ni">Noticias</div>
+        <div class="ni">Actividades</div>
+        <div class="ni act">NexusFP</div>
+        <div class="ni">Contacto</div>
+      </div>
+    </div>
+    <div class="nexus">
+      <div class="ntabs">
+        <div class="tab">Convocatorias</div>
+        <div class="tab">Proyectos</div>
+        <div class="tab act">Visor</div>
+        <div class="tab">Ecosistema</div>
+        <div class="tab">Recursos</div>
+      </div>
+      <div class="visor">
+        <!-- SIDEBAR -->
+        <div class="sb">
+          <div class="sbh">
+            <div class="sbhttl">Buscador</div>
+            <div class="sbsub">Centros y actuaciones innovadoras</div>
+          </div>
+          <div class="flt">
+            <div class="fg">
+              <label>Categoría</label>
+              <select>
+                <option>Centros y actuaciones</option>
+                <option>── Centros ──</option>
+                <option>Centro de Excelencia FP</option>
+                <option>Centro de Referencia Nacional</option>
+                <option>Centro CoVE Erasmus+</option>
+                <option>Centro Integrado FP</option>
+                <option>Centro Innovador</option>
+                <option>Centro de Formación Ocupacional</option>
+                <option>── Actuaciones ──</option>
+                <option>Proyecto de innovación</option>
+                <option>Experiencia ApS-FP</option>
+                <option>Reto empresarial</option>
+                <option>Red de transferencia</option>
+              </select>
+            </div>
+            <div class="fdiv"></div>
+            <div class="fg">
+              <label>Localización</label>
+              <select>
+                <option>Toda Andalucía y España</option>
+                <option>── Andalucía ──</option>
+                <option>Almería</option><option>Cádiz</option><option>Córdoba</option>
+                <option>Granada</option><option>Huelva</option><option>Jaén</option>
+                <option>Málaga</option><option>Sevilla</option>
+                <option>── España ──</option>
+                <option>Aragón</option><option>Canarias</option><option>Castilla-La Mancha</option>
+                <option>Cataluña</option><option>Comunidad Valenciana</option>
+                <option>Extremadura</option><option>Galicia</option>
+                <option>Murcia</option><option>Navarra</option><option>País Vasco</option>
+                <option>── Europa ──</option>
+                <option>Alemania</option><option>Bélgica</option><option>Francia</option>
+                <option>Grecia</option><option>Italia</option><option>Noruega</option>
+                <option>Países Bajos</option><option>Portugal</option><option>República Checa</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Centro / Entidad</label>
+              <select>
+                <option>Todos los centros</option>
+                <option>IES Galileo Galilei (Córdoba)</option>
+                <option>CPIFP Prof. José Luis Graiño (Huelva)</option>
+                <option>Escuela del Mármol de Fines (Almería)</option>
+                <option>CAPIFP (Málaga)</option>
+                <option>CIFP Carlos III (Cartagena)</option>
+                <option>CIPFP El Palmeral (Elche)</option>
+                <option>CIDA (Comunidad Valenciana)</option>
+                <option>CIFO Santa Coloma (Cataluña)</option>
+                <option>CIFO Tarragona</option><option>CIFO Lleida</option>
+                <option>Escoles Agràries (Cataluña)</option>
+                <option>CIFPA (Aragón)</option>
+                <option>CPIFP San Blas (Teruel)</option>
+                <option>Tknika / Itlent (País Vasco)</option>
+                <option>CIFP Les Garberes (Cataluña)</option>
+                <option>CNFOP Don Benito (Extremadura)</option>
+                <option>CNFOP Guadalajara (C.-La Mancha)</option>
+                <option>CENIFER Imarcoain (Navarra)</option>
+                <option>CNFOP Los Realejos (Canarias)</option>
+                <option>IGAFA Illa de Arousa (Galicia)</option>
+                <option>Instituto Politécnico Marítimo-Pesquero de Vigo</option>
+                <option>CIFEA Lorca (Murcia)</option>
+                <option>IFAPA</option>
+                <option>IHSM La Mayora CSIC-UMA</option>
+                <option>Hub La Vega Innova (Alcalá de Henares)</option>
+                <option>CENTA · CETAQUA · BioAzul</option>
+                <option>CIREF</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Temática / Sector</label>
+              <select>
+                <option>Todas las temáticas</option>
+                <option>── Área estratégica ──</option>
+                <option>Agroganadería y Recursos Naturales</option>
+                <option>Agricultura, caza y silvicultura</option>
+                <option>Acuicultura y pesca marítima</option>
+                <option>Energía eléctrica, gas y agua</option>
+                <option>Minería e industrias extractivas</option>
+                <option>Sostenibilidad y economía verde</option>
+                <option>Energías renovables</option>
+                <option>── Transversal ──</option>
+                <option>Digitalización e IA</option>
+                <option>Ecología y biodiversidad</option>
+                <option>Habilidades verdes (Green skills)</option>
+                <option>Impresión 3D y fabricación avanzada</option>
+                <option>Manufactura avanzada</option>
+                <option>Mecatrónica</option>
+                <option>Microelectrónica</option>
+                <option>Ciberseguridad</option>
+                <option>Inclusión social</option>
+                <option>PYMEs e innovación empresarial</option>
+                <option>── Servicios ──</option>
+                <option>Sanidad y trabajo social</option>
+                <option>Hostelería y turismo</option>
+                <option>Comercio y actividades minoristas</option>
+                <option>Construcción sostenible</option>
+                <option>Transporte, logística y comunicación</option>
+                <option>Actividades profesionales y técnicas</option>
+                <option>Administración y servicios de apoyo</option>
+                <option>Actividades artísticas y recreativas</option>
+                <option>Industrias culturales y creativas</option>
+                <option>Audiovisual y medios</option>
+                <option>Automoción</option>
+                <option>Aeroespacial</option>
+                <option>Soldadura e industria metálica</option>
+                <option>Servicios financieros y seguros</option>
+                <option>Actividades inmobiliarias</option>
+                <option>Educación y formación</option>
+                <option>Administración pública y defensa</option>
+                <option>Organismos internacionales</option>
+              </select>
+            </div>
+            <button class="bsrch">🔍 Buscar</button>
+            <button class="brst">Limpiar filtros</button>
+          </div>
+          <div class="res">
+            <div class="rct">Mostrando <strong>38 resultados</strong> · Todos los ámbitos</div>
+            <div class="rc"><span class="badge bg">Excelencia</span><div class="rct2">IES Galileo Galilei · Córdoba</div><div class="rcm">Agraria · Seguridad MA · CoVE</div></div>
+            <div class="rc"><span class="badge bg">Excelencia</span><div class="rct2">CPIFP Prof. J.L. Graiño · Huelva</div><div class="rcm">Prevención Riesgos</div></div>
+            <div class="rc"><span class="badge bt">CRN</span><div class="rct2">Escuela del Mármol · Fines, Almería</div><div class="rcm">Industrias Extractivas</div></div>
+            <div class="rc"><span class="badge bcv">CoVE</span><div class="rct2">TEAM#UP · España / Alemania / Noruega</div><div class="rcm">Restauración ecológica · Erasmus+</div></div>
+            <div class="rc"><span class="badge bcv">CoVE</span><div class="rct2">Agrifood4Future · España / Italia / Francia</div><div class="rcm">Agricultura inteligente · Erasmus+</div></div>
+            <div class="rc"><span class="badge bcv">CoVE</span><div class="rct2">BRIDGES · Noruega / Suecia / Finlandia</div><div class="rcm">Acuicultura · Erasmus+</div></div>
+            <div class="rc"><span class="badge bm">Entidad</span><div class="rct2">Hub La Vega Innova · Alcalá de Henares</div><div class="rcm">Ecosistema agroalimentario · FIWARE</div></div>
+            <div class="rc"><span class="badge bs">Investigación</span><div class="rct2">IHSM La Mayora CSIC-UMA · Málaga</div><div class="rcm">Hortofruticultura subtropical</div></div>
+          </div>
+        </div>
+        <!-- MAP -->
+        <div class="mapa">
+          <div class="mbdg">📍 <span>38 centros y actuaciones</span></div>
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const map=L.map('map',{center:[37.8,-4.0],zoom:6,zoomControl:true});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',opacity:0.72}).addTo(map);
+document.getElementById('map').style.filter='saturate(0.62) brightness(1.07)';
+function mk(c,s=14){return L.divIcon({className:'',html:`<div style="width:${s}px;height:${s}px;border-radius:50%;background:${c};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>`,iconSize:[s,s],iconAnchor:[s/2,s/2],popupAnchor:[0,-s/2]});}
+const G='#7BAF3A',T='#1A7A8A',N='#1B3A5C',M='#C0396B',S='#2E8B6E',V='#9B59B6';
+const pts=[
+  // ANDALUCÍA
+  {lat:37.886,lng:-4.779,n:"IES Galileo Galilei",d:"Centro Excelencia · Agraria · CoVE · Córdoba",c:G},
+  {lat:37.271,lng:-6.854,n:"CPIFP Prof. J.L. Graiño",d:"Centro Excelencia · Prevención RR.PP. · Huelva",c:G},
+  {lat:37.331,lng:-2.862,n:"Escuela del Mármol de Fines",d:"CRN · Industrias Extractivas · Almería",c:T},
+  {lat:36.721,lng:-4.421,n:"CAPIFP · Málaga TechPark",d:"Hub autonómico · Área Estratégica ARNS",c:N},
+  {lat:37.380,lng:-5.970,n:"CENTA · Sevilla",d:"Centro Tecnológico · Ciclo del Agua · SbN",c:T},
+  {lat:37.004,lng:-5.599,n:"IES Agropecuario · Carmona",d:"Centro innovador · Agraria · Sevilla",c:N},
+  {lat:36.533,lng:-6.293,n:"IES Puertas del Campo · Cádiz",d:"Centro innovador · Agraria · litoral",c:N},
+  {lat:36.716,lng:-2.189,n:"IES El Palmeral · Roquetas de Mar",d:"Centro innovador · Agraria · Almería",c:N},
+  {lat:37.299,lng:-3.133,n:"IES Sierra Nevada · Guadix",d:"Centro innovador · Agraria · Granada",c:N},
+  {lat:37.172,lng:-3.601,n:"IFAPA Alameda del Obispo",d:"Investigación agraria · Junta Andalucía · Córdoba",c:G},
+  {lat:36.659,lng:-4.548,n:"IHSM La Mayora CSIC-UMA",d:"Estación Experimental · Hortofruticultura subtropical · Málaga",c:M},
+  {lat:36.540,lng:-6.290,n:"CETAQUA · Málaga",d:"Centro Tecnológico del Agua",c:T},
+  {lat:36.010,lng:-5.603,n:"IES Los Barrios · Algeciras",d:"Marítimo-Pesquera · Cádiz litoral",c:S},
+  {lat:36.794,lng:-2.421,n:"IES Almeraya · Almería",d:"Marítimo-Pesquera · Cultivos Acuícolas",c:S},
+  {lat:37.143,lng:-7.053,n:"IES Lepe · Huelva",d:"Marítimo-Pesquera · pesca litoral",c:S},
+  {lat:37.749,lng:-6.559,n:"IES Cuenca Minera · Riotinto",d:"Industrias Extractivas · Huelva",c:T},
+  {lat:37.889,lng:-4.775,n:"CIREF · Córdoba",d:"Centro Ibérico Restauración Fluvial · SbN",c:S},
+  {lat:37.344,lng:-5.755,n:"BioAzul / ECODENA · Sevilla",d:"Depuración natural · innovación hídrica",c:S},
+  // ESPAÑA
+  {lat:40.483,lng:-3.359,n:"Hub La Vega Innova · Alcalá de Henares",d:"Ecosistema innovación agroalimentaria · FIWARE · Hackathon AgriFoodTech",c:M},
+  {lat:37.600,lng:-0.986,n:"CIFP Carlos III · Cartagena",d:"Centro Integrado FP · Murcia",c:N},
+  {lat:38.262,lng:-0.698,n:"CIPFP El Palmeral · Elche",d:"CoVE TEAM#UP · Restauración ecológica · Com. Valenciana",c:V},
+  {lat:39.480,lng:-0.340,n:"CIDA · Paterna, Valencia",d:"Centro Innovación Digital Avanzado FP · Com. Valenciana",c:N},
+  {lat:41.383,lng:2.183,n:"CIFP Les Garberes · Cataluña",d:"Escola Agrària · Referente nacional",c:G},
+  {lat:41.648,lng:-0.891,n:"CIFPA · Zaragoza",d:"Centro Innovación FP Aragón · Referente nacional",c:T},
+  {lat:43.263,lng:-2.934,n:"Tknika / Itlent · Vitoria-Gasteiz",d:"Centro Innovación · Modelo ETHAZI · ACbR",c:T},
+  {lat:41.455,lng:2.175,n:"CIFO Santa Coloma · Cataluña",d:"Agraria · Energía y Agua · Rehabilitación ecoeficiente",c:N},
+  {lat:41.118,lng:1.245,n:"CIFO Tarragona",d:"Química · Fabricación mecánica · Seguridad MA",c:N},
+  {lat:41.614,lng:0.624,n:"CIFO Lleida",d:"Instalación · Fabricación · Electricidad · Energía y Agua",c:N},
+  {lat:41.630,lng:0.630,n:"Escoles Agràries · Cataluña",d:"Red formación agraria · Generalitat de Catalunya",c:G},
+  {lat:40.648,lng:-1.002,n:"CPIFP San Blas · Teruel",d:"Centro Integrado FP · Aragón",c:N},
+  {lat:38.888,lng:-6.970,n:"CNFOP Don Benito · Badajoz",d:"Centro Nacional FP Ocupacional · Extremadura",c:G},
+  {lat:40.632,lng:-3.162,n:"CNFOP Guadalajara",d:"Centro Nacional FP Ocupacional · Castilla-La Mancha",c:G},
+  {lat:42.818,lng:-1.645,n:"CENIFER Imarcoain · Navarra",d:"Energías Renovables · Centro Nacional FP",c:T},
+  {lat:28.391,lng:-16.536,n:"CNFOP Los Realejos · Santa Cruz de Tenerife",d:"Jardinería · Canarias",c:G},
+  {lat:42.502,lng:-8.864,n:"IGAFA · Illa de Arousa, Pontevedra",d:"Instituto Galego Formación Acuicultura · Galicia",c:S},
+  {lat:42.238,lng:-8.712,n:"Instituto Politécnico Marítimo-Pesquero · Vigo",d:"Marítimo-Pesquera · Galicia",c:S},
+  {lat:37.673,lng:-1.706,n:"CIFEA Lorca · Murcia",d:"Centro Integrado FP Experiencias Agrarias · Murcia",c:G},
+  // CoVEs EUROPEOS
+  {lat:52.090,lng:5.121,n:"CoVE SEED · Utrecht (Países Bajos)",d:"Energía sostenible · Erasmus+ · 5 países",c:V},
+  {lat:60.472,lng:8.468,n:"CoVE BRIDGES · Frøya (Noruega)",d:"Acuicultura · Erasmus+ · Noruega/Suecia/Finlandia/Islandia",c:V},
+  {lat:51.826,lng:11.972,n:"CoVE TEAM#UP · Anhalt (Alemania)",d:"Restauración ecológica · Coordinador · Erasmus+",c:V},
+  {lat:50.080,lng:14.429,n:"CoVE TEAM#UP · Benešov (Rep. Checa)",d:"Restauración ecológica · Erasmus+",c:V},
+  {lat:50.862,lng:4.352,n:"CoVE Agrifood4Future · Bruselas",d:"Agricultura inteligente · Coordinador VIVES · Erasmus+",c:V},
+  {lat:37.983,lng:23.727,n:"CoVE SEED / 3LoE · Atenas (Grecia)",d:"Energía sostenible · Economía verde · Erasmus+",c:V},
+  {lat:44.405,lng:8.946,n:"CoVE Agrifood4Future · Italia",d:"Agri-food · Emilia-Romagna · Erasmus+",c:V},
+  {lat:38.716,lng:-9.139,n:"CoVE Agrifood4Future · Lisboa",d:"Food4Sustainability · Portugal · Erasmus+",c:V},
+];
+const cl=L.markerClusterGroup({showCoverageOnHover:false,iconCreateFunction:function(c){const n=c.getChildCount();return L.divIcon({html:`<div style="background:rgba(26,122,138,0.75);color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);">${n}</div>`,className:'',iconSize:[34,34],iconAnchor:[17,17]});}});
+pts.forEach(p=>{const m=L.marker([p.lat,p.lng],{icon:mk(p.c,15)});m.bindPopup(`<div style="font-family:'Raleway',sans-serif;min-width:170px;"><div style="font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;color:#1B3A5C;margin-bottom:4px;">${p.n}</div><div style="font-size:11px;color:#6a8a9a;">${p.d}</div></div>`,{maxWidth:220});cl.addLayer(m);});
+map.addLayer(cl);
+</script>
+</body>
+</html>
